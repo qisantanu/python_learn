@@ -45,6 +45,12 @@ class ItemRead(SQLModel):
     description: str = None
     price: float
 
+class Pagination(SQLModel):
+    items: List[ItemRead]
+    total: int
+    page: int
+    page_size: int
+
 class ItemUpdate(SQLModel):
     name: Optional[str] = None
     description: Optional[str] = None
@@ -67,8 +73,12 @@ def on_startup():
 ### CRUD operations using FastAPI ###
 
 # INDEX
-@app.get("/items/", response_model=List[ItemRead])
-def get_items(min_price: Optional[float] = None, max_price: Optional[float] = None, search: Optional[str] = None):
+@app.get("/items/", response_model=Pagination)
+def get_items(min_price: Optional[float] = None, 
+              max_price: Optional[float] = None, 
+              search: Optional[str] = None,
+              page: int = 1,
+              page_size: int = 10):
     with Session(engine) as session:
         query = select(Item)
 
@@ -81,9 +91,15 @@ def get_items(min_price: Optional[float] = None, max_price: Optional[float] = No
         if search is not None:
             query = query.where(or_(Item.name.contains(search), Item.description.contains(search)))
             
+        if page_size is not None:
+            query = query.offset((page - 1) * page_size).limit(page_size)
+        else:
+            query = query.limit(100)
 
         items = session.exec(query).all()
-        return items
+        
+        pagianted_items = Pagination(items=items, total=len(items), page=page, page_size=page_size)
+        return pagianted_items
 
 # SHOW
 @app.get("/items/{item_id}", response_model=ItemRead)
