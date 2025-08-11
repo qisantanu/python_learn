@@ -1,0 +1,46 @@
+# Byte-compiled / optimized / compiled files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment
+.venv/
+env/
+venv/
+*.egg
+
+# Editor/IDE specific files
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+
+# Configuration and secrets
+.env
+.env.*
+secrets.py
+config.py
+*.key
+*.pem
+
+# Database files
+*.sqlite3
+*.db
+*.bak
+
+# Build artifacts
+dist/
+build/
+*.whl
+
+# Other
+.history/

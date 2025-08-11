@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-from sqlmodel import Field, create_engine, Session, select, SQLModel
+from sqlmodel import Field, create_engine, Session, select, SQLModel, or_
 
 # Create FastAPI instance
 app = FastAPI()
@@ -68,9 +68,21 @@ def on_startup():
 
 # INDEX
 @app.get("/items/", response_model=List[ItemRead])
-def get_items():
+def get_items(min_price: Optional[float] = None, max_price: Optional[float] = None, search: Optional[str] = None):
     with Session(engine) as session:
-        items = session.exec(select(Item)).all()
+        query = select(Item)
+
+        if min_price is not None:
+            query = query.where(Item.price >= min_price)
+
+        if max_price is not None:
+            query = query.where(Item.price <= max_price)
+
+        if search is not None:
+            query = query.where(or_(Item.name.contains(search), Item.description.contains(search)))
+            
+
+        items = session.exec(query).all()
         return items
 
 # SHOW
