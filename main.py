@@ -31,6 +31,27 @@ class Item(SQLModel, table=True):
 # simulating a database with a list
 fake_db = []
 
+### Create SCHEMAs
+
+class ItemCreate(SQLModel):
+    name: str
+    description: str = None
+    price: float
+    tax: float
+
+class ItemRead(SQLModel):
+    id: int
+    name: str
+    description: str = None
+    price: float
+
+class ItemUpdate(SQLModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    tax: Optional[float] = None
+    
+
 #### database connection ####
 sqlite_file_name = "database.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
@@ -46,14 +67,14 @@ def on_startup():
 ### CRUD operations using FastAPI ###
 
 # INDEX
-@app.get("/items/", response_model=List[Item])
+@app.get("/items/", response_model=List[ItemRead])
 def get_items():
     with Session(engine) as session:
         items = session.exec(select(Item)).all()
         return items
 
 # SHOW
-@app.get("/items/{item_id}", response_model=Item)
+@app.get("/items/{item_id}", response_model=ItemRead)
 def get_item(item_id: int):
   with Session(engine) as session:    
     item = session.get(Item, item_id)
@@ -64,26 +85,31 @@ def get_item(item_id: int):
 
 # CREATE
 @app.post("/items/", response_model=Item)
-def create_item(item: Item):
+def create_item(item: ItemCreate):
+    db_item = Item(**item.dict())
     with Session(engine) as session:
-        session.add(item)
+        session.add(db_item)
         session.commit()
-        session.refresh(item)
-        return item
+        session.refresh(db_item)
+        return db_item
 
 # UPDATE
-@app.put("/items/{item_id}", response_model=Item)
-def update_item(item_id: int, updated_item: Item):
+@app.put("/items/{item_id}", response_model=ItemUpdate)
+def update_item(item_id: int, item_to_update: ItemUpdate):
     with Session(engine) as session:
         item  = session.get(Item, item_id)
 
         if not item:
             raise HTTPException(status_code=404, detail="Item not found")
 
-        item.name = updated_item.name
-        item.description = updated_item.description
-        item.price = updated_item.price
-        item.tax = updated_item.tax
+        updated_item = item_to_update.dict(exclude_unset=True)
+
+        if not updated_item:
+            raise HTTPException(status_code=400, detail="No fields to update")
+        
+        for key, value in updated_item.items():
+            setattr(item, key, value)
+
         session.add(item)
         session.commit()
         session.refresh(item)
