@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-from sqlmodel import Field, create_engine, declarative_base, Session, Select, func
+from sqlmodel import Field, create_engine, Session, select, SQLModel
 
 # Create FastAPI instance
 app = FastAPI()
@@ -20,7 +20,9 @@ app = FastAPI()
 # to run the FastAPI app, use the command:
 # uvicorn main:app --reload
 
-class Item(BaseModel):
+class Item(SQLModel, table=True):
+    __tablename__ = "items"
+    id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     description: str = None
     price: float
@@ -29,39 +31,73 @@ class Item(BaseModel):
 # simulating a database with a list
 fake_db = []
 
+#### database connection ####
+sqlite_file_name = "database.db"
+sqlite_url = f"sqlite:///{sqlite_file_name}"
+engine = create_engine(sqlite_url, echo=True)
+
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
+
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
+
+### CRUD operations using FastAPI ###
+
 # INDEX
 @app.get("/items/", response_model=List[Item])
 def get_items():
-    return fake_db
+    with Session(engine) as session:
+        items = session.exec(select(Item)).all()
+        return items
 
 # SHOW
 @app.get("/items/{item_id}", response_model=Item)
 def get_item(item_id: int):
-  if item_id >= len(fake_db) or item_id < 0:
-    raise HTTPException(status_code=404, detail="Item not found")
-  
-  return fake_db[item_id]
+  with Session(engine) as session:    
+    item = session.get(Item, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    return item
 
 # CREATE
 @app.post("/items/", response_model=Item)
 def create_item(item: Item):
-    fake_db.append(item)
-    return item
+    with Session(engine) as session:
+        session.add(item)
+        session.commit()
+        session.refresh(item)
+        return item
 
 # UPDATE
 @app.put("/items/{item_id}", response_model=Item)
-def update_item(item_id: int, item: Item):
-    if item_id >= len(fake_db) or item_id < 0:
-        raise HTTPException(status_code=404, detail="Item not found")
+def update_item(item_id: int, updated_item: Item):
+    with Session(engine) as session:
+        item  = session.get(Item, item_id)
 
-    fake_db[item_id] = item
-    return item
+        if not item:
+            raise HTTPException(status_code=404, detail="Item not found")
+
+        item.name = updated_item.name
+        item.description = updated_item.description
+        item.price = updated_item.price
+        item.tax = updated_item.tax
+        session.add(item)
+        session.commit()
+        session.refresh(item)
+        return item
 
 # DELETE
 @app.delete("/items/{item_id}", response_model=dict)
 def delete_item(item_id: int):
-    if item_id >= len(fake_db) or item_id < 0:
-        raise HTTPException(status_code=404, detail="Item not found")
-     
-    del fake_db[item_id]
-    return {"message": "Item deleted successfully"}
+    with Session(engine) as session:
+        item = session.get(Item, item_id)
+
+        if not item:
+            raise HTTPException(status_code=404, detail="Item not found")
+
+        session.delete(item)
+        session.commit()
+        return { 'message': "Item deleted successfully" }
