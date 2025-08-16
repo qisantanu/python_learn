@@ -1,6 +1,6 @@
 uvicorn==0.35.0
 fastapi==0.116.1
-PyYAML==5.4.1
+PyYAML==6.0.2
 passlib==1.7.4
 python-jose==3.5.0
 pydantic==2.11.7
@@ -9,3 +9,4 @@ sqlite-utils==3.38
 alembic==1.16.4
 tomli==2.2.1
 pysqlite3-binary==0.5.4
+tomli==2.2.1
