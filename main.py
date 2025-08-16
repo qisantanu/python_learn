@@ -30,7 +30,8 @@ app.include_router(users_router)
 
 # to run the FastAPI app, use the command:
 # uvicorn main:app --reload --log-config=log_conf.yml
-    
+# alembic revision --autogenerate -m "Add user-item relationship"
+# alembic upgrade head  
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)

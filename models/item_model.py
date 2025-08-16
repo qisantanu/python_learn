@@ -1,6 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import List, Optional
-from models import User
 
 class Item(SQLModel, table=True):
     __tablename__ = "items"
@@ -9,8 +8,11 @@ class Item(SQLModel, table=True):
     description: str = None
     price: float
     tax: float = None
-    # user_id: int = Field(foreign_key="users.id") # belongs_to
-    # user: "User" = Relationship(back_populates="items") #belongs_to link
+    # Foreign key
+    user_id: Optional[int] = Field(default=None, foreign_key="users.id")
+
+    # belongs_to user
+    user: Optional["User"] = Relationship(back_populates="items")
 
 ### CREATE SCHEMAs ###
 

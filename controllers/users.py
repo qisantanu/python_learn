@@ -1,7 +1,7 @@
 from fastapi import HTTPException, APIRouter, Depends
 from pydantic import BaseModel
 from typing import List, Optional
-from models.user_model import User, UserCreate, UserLogin, Token
+from models.user_model import User, UserCreate, UserLogin, Token, UserRead, UserUpdate
 from helpers.password_hashing import hash_password, verify_password
 from helpers.json_wt import create_access_token
 from sqlmodel import Session, select
@@ -43,6 +43,22 @@ def login(user: UserLogin, session: Session = Depends(lambda: Session(engine))):
         token = create_access_token({"sub": db_user.username})
         return Token(access_token=token, token_type="bearer")
     
-@router.get("/me", response_model=User, tags=["users"])
+@router.get("/me", response_model=UserRead, tags=["users"])
 def read_current_user(current_user: User = Depends(get_current_user)):
     return current_user
+
+@router.put("/users/{user_id}", response_model=UserRead, tags=["users"])
+def update_user(user_id: int, user: UserUpdate, session: Session = Depends(lambda: Session(engine))):
+    with Session(engine) as session:
+        db_user = session.get(User, user_id)
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        db_user.adhar_no = user.adhar_no
+        db_user.user_role = user.user_role
+        
+        session.add(db_user)
+        session.commit()
+        session.refresh(db_user)
+
+        return db_user
