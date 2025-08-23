@@ -10,4 +10,5 @@ alembic==1.16.4
 tomli==2.2.1
 pysqlite3-binary==0.5.4
 tomli==2.2.1
-httpx=0.28.1
+httpx==0.28.1
+python-dotenv==0.19.2

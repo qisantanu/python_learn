@@ -44,3 +44,4 @@ build/
 
 # Other
 .history/
+.env

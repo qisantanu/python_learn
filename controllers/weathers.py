@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import httpx
 from models.weather_model import WeatherResponse, WeatherErrorResponse
 import json
+from dotenv import dotenv_values
 
 router = APIRouter()
 
@@ -17,14 +18,21 @@ async def get_weather_data(lat: float = 22.6138, lon: float = 88.4306):
         "description": "Sunny"
     }
 
-    api_key = 'f3d3a1b9f8b4e4b0c0b0c0b0c0b0c0b0'
-    weather_service_url = 'https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}' 
+    config = dotenv_values(".env")
 
+    api_key = config['WEATHER_API_KEY']
+    weather_service_url = f'https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}' 
+    print(weather_service_url)
     response = httpx.get(weather_service_url)
-    
+    parsed_reponse = json.loads(response.text)
+
     if response.status_code != 200:
-      return json.loads(response.text)
+      return parsed_reponse
     else:
-      return response.text
+      return { 
+         'city': parsed_reponse['name'], 
+         'temparature': parsed_reponse['main']['temp'], 
+         'description': parsed_reponse['weather'][0]['description']
+      }
 
     # return dummy_data
