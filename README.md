@@ -1,8 +1,3 @@
-  
-<p align="center">
-  <img src="src/app/assets/images/logo-email.png" alt="ShareCar Logo" width="150"/>
-</p>
-
 ## FastAPI from Python3
 
 This repository is where I grab the knowledge of a framework for API development only named FastAPI renowned for web development.
