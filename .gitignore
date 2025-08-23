@@ -26,7 +26,6 @@ temp/
 
 # Configuration and secrets
 .env
-.env.*
 secrets.py
 config.py
 *.key
@@ -44,4 +43,3 @@ build/
 
 # Other
 .history/
-.env
