@@ -6,6 +6,7 @@ from sqlmodel import SQLModel
 from database.database import engine
 from controllers.items import router as items_router
 from controllers.users import router as users_router
+from controllers.weathers import router as weathers_router
 
 # Create FastAPI instance
 app = FastAPI()
@@ -20,6 +21,7 @@ app.add_middleware(
 )
 app.include_router(items_router)
 app.include_router(users_router)
+app.include_router(weathers_router)
 
 # # Root endpoint
 # @app.get("/")
@@ -32,6 +34,7 @@ app.include_router(users_router)
 # uvicorn main:app --reload --log-config=log_conf.yml
 # alembic revision --autogenerate -m "Add user-item relationship"
 # alembic upgrade head  
+# rails' pry like lib is : breakpoint()
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
